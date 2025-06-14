@@ -38,13 +38,18 @@ class ProductsCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::setFromDb(); // set columns from db columns.
-
+        //CRUD::setFromDb(); // set columns from db columns.
+        CRUD::column('sku');
+        CRUD::column('name');
+        CRUD::column('category_id');
+        CRUD::column('price');
+        CRUD::column('photo_url');
         /**
          * Columns can be defined using the fluent syntax:
          * - CRUD::column('price')->type('number');
          */
     }
+
 
     /**
      * Define what happens when the Create operation is loaded.
@@ -55,9 +60,34 @@ class ProductsCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation([
-            // 'name' => 'required|min:2',
+            'sku' => 'required|string|min:3|max:255|unique:products,sku',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'photo_url' => 'nullable|url|max:255'
         ]);
-        CRUD::setFromDb(); // set fields from db columns.
+
+        CRUD::field('sku')
+            ->type('text')
+            ->label('Артикул (SKU)')
+            ->hint('Обязательное поле, минимум 3 символа')
+            ->attributes(['required' => 'required']);
+
+        CRUD::field('name')->validationRules('required|min:1');
+        CRUD::field('category_id')->validationRules('required');
+        CRUD::field('price')->validationRules('required|min:1');
+        CRUD::field('photo_url')->validationRules('required|max:255');
+        CRUD::field('sku')->on('saving', function ($entry) {
+            logger()->debug('Saving product with SKU:', ['sku' => $entry->sku]);
+            if (empty($entry->sku)) {
+                abort(400, 'Поле SKU обязательно для заполнения');
+            }
+        });
+
+
+        \App\Models\User::creating(function ($entry) {
+            $entry->password = \Hash::make($entry->password);
+        });
 
         /**
          * Fields can be defined using the fluent syntax:

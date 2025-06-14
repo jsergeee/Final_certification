@@ -23,13 +23,29 @@ class Products extends Model
     protected $guarded = ['id'];
     // protected $fillable = [];
     // protected $hidden = [];
+    protected $fillable = [
+        'sku',
+        'name',
+        'category_id',
+        'price',
+        'photo_url'
+    ];
 
     /*
     |--------------------------------------------------------------------------
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
+    protected static function boot()
+    {
+        parent::boot();
 
+        static::creating(function ($product) {
+            if (empty($product->sku)) {
+                throw new \Exception('Поле SKU обязательно для заполнения');
+            }
+        });
+    }
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
@@ -53,4 +69,9 @@ class Products extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+
+    public function category()
+    {
+        return $this->belongsTo(\App\Models\Category::class);
+    }
 }

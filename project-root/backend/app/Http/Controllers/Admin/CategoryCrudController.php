@@ -38,8 +38,11 @@ class CategoryCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::setFromDb(); // set columns from db columns.
-
+        //CRUD::setFromDb(); // set columns from db columns.
+        CRUD::column('name');
+        CRUD::column('slug');
+        CRUD::column('description');
+        
         /**
          * Columns can be defined using the fluent syntax:
          * - CRUD::column('price')->type('number');
@@ -54,10 +57,12 @@ class CategoryCrudController extends CrudController
      */
     protected function setupCreateOperation()
     {
-        CRUD::setValidation([
-            // 'name' => 'required|min:2',
-        ]);
-        CRUD::setFromDb(); // set fields from db columns.
+        // CRUD::setValidation([
+        // 'name' => 'required|min:2',
+        // ]);
+        //CRUD::setFromDb(); // set fields from db columns.
+        CRUD::field('name')->validationRules('required|min:5');
+        CRUD::field('description')->validationRules('required|max:255');
 
         /**
          * Fields can be defined using the fluent syntax:
@@ -75,4 +80,5 @@ class CategoryCrudController extends CrudController
     {
         $this->setupCreateOperation();
     }
+
 }

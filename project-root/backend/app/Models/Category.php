@@ -5,6 +5,7 @@ namespace App\Models;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Category extends Model
 {
@@ -16,7 +17,7 @@ class Category extends Model
     | GLOBAL VARIABLES
     |--------------------------------------------------------------------------
     */
-
+    protected $fillable = ['name', 'slug', 'description'];
     protected $table = 'categories';
     // protected $primaryKey = 'id';
     // public $timestamps = false;
@@ -29,7 +30,14 @@ class Category extends Model
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
+    protected static function boot()
+    {
+        parent::boot();
 
+        static::creating(function ($category) {
+            $category->slug = Str::slug($category->name);
+        });
+    }
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
@@ -53,4 +61,9 @@ class Category extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+
+    public function products()
+{
+    return $this->hasMany(\App\Models\Product::class);
+}
 }
