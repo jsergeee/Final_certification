@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Cookie;
 
 class AuthController extends Controller
 {
@@ -12,7 +12,7 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
-            'password' => 'required',
+            'password' => 'required|string|min:8',
         ]);
 
         if (!Auth::attempt($credentials)) {
@@ -21,11 +21,35 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $request->session()->regenerate();
+        $user = Auth::user();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user' => Auth::user(),
-            'csrf_token' => csrf_token()
-        ]);
+            'user' => $user,
+            'token' => $token
+        ])->withCookie(Cookie::make(
+            'auth_token',
+            $token,
+            config('session.lifetime'),
+            '/',
+            config('session.domain'),
+            config('session.secure'),
+            true,
+            false,
+            'Strict'
+        ));
+    }
+
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        
+        return response()->json(['message' => 'Logged out'])
+            ->withoutCookie('auth_token');
+    }
+
+    public function user(Request $request)
+    {
+        return response()->json($request->user());
     }
 }

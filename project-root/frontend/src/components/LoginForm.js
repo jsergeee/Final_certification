@@ -1,77 +1,44 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../hooks/auth';
 
-function LoginForm ({ setIsAuthenticated }) {
+function LoginForm({ setIsAuthenticated }) {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [errors, setErrors] = useState({});
-  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, error: authError } = useAuth();
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage('');
+    setErrors({});
 
     try {
-      // 1. Получаем CSRF-куки (обязательный шаг!)
-      const csrfResponse = await fetch(
-        'http://127.0.0.1:8000/sanctum/csrf-cookie',
-        {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-          },
-        },
-      );
-
-      if (!csrfResponse.ok) {
-        throw new Error('CSRF token request failed');
+      const result = await login(formData.email, formData.password);
+      
+      if (result.success) {
+        setIsAuthenticated(true);
+        navigate('/dashboard');
+      } else {
+        setErrors({ 
+          auth: [result.message || 'Authentication failed'] 
+        });
       }
-
-      // 2. Отправляем данные для входа
-      const loginResponse = await fetch('http://127.0.0.1:8000/login', {
-        method: 'POST',
-        credentials: 'include', // Критически важно!
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'X-XSRF-TOKEN': getCookie('XSRF-TOKEN'), // Добавляем токен в заголовок
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
-
-      const data = await loginResponse.json();
-
-      if (!loginResponse.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      // 3. Успешный вход
-      setIsAuthenticated(true);
-      navigate('/dashboard');
     } catch (error) {
-      setMessage(error.message || 'Authentication failed');
       console.error('Login error:', error);
+      setErrors({ 
+        auth: ['Произошла ошибка при авторизации'] 
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Вспомогательная функция для получения куки
-  function getCookie (name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-  }
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -120,6 +87,7 @@ function LoginForm ({ setIsAuthenticated }) {
             value={formData.password}
             onChange={handleChange}
             required
+            minLength="8"
             autoComplete='current-password'
             aria-describedby='passwordError'
             className={`form-input ${errors?.password ? 'is-invalid' : ''}`}
@@ -131,6 +99,12 @@ function LoginForm ({ setIsAuthenticated }) {
           )}
         </div>
 
+        {(errors.auth || authError) && (
+          <div className='error-message mb-3'>
+            {errors.auth?.[0] || authError}
+          </div>
+        )}
+
         <button
           type='submit'
           disabled={isLoading}
@@ -140,13 +114,7 @@ function LoginForm ({ setIsAuthenticated }) {
           {isLoading ? 'Вход...' : 'Войти'}
         </button>
 
-        {message && (
-          <div className={`status-message ${errors ? 'error' : 'success'}`}>
-            {message}
-          </div>
-        )}
-
-        <div className='register-link'>
+        <div className='register-link mt-3'>
           Нет аккаунта?{' '}
           <Link to='/register' className='register-link-text'>
             Зарегистрируйтесь

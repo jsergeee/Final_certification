@@ -29,7 +29,14 @@ return [
     // The web middleware (group) used in all base & CRUD routes
     // If you've modified your "web" middleware group (ex: removed sessions), you can use a different
     // route group, that has all the the middleware listed below in the comments.
-    'web_middleware' => 'web',
+    // 'web_middleware' => 'web',
+    'web_middleware' => [
+        \Illuminate\Cookie\Middleware\EncryptCookies::class,
+        \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+        \Illuminate\Session\Middleware\StartSession::class,
+        \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+    ],
     // Or you can comment the above, and uncomment the complete list below.
     // 'web_middleware' => [
     //     \App\Http\Middleware\EncryptCookies::class,
