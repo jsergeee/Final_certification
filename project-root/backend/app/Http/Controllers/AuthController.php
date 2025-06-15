@@ -4,7 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Cookie;
+=======
+use Illuminate\Validation\ValidationException;
+>>>>>>> 3d9fbeb966ba2697fba56bdca679014d45790701
 
 class AuthController extends Controller
 {
@@ -12,7 +16,11 @@ class AuthController extends Controller
     {
         $credentials = $request->validate([
             'email' => 'required|email',
+<<<<<<< HEAD
             'password' => 'required|string|min:8',
+=======
+            'password' => 'required',
+>>>>>>> 3d9fbeb966ba2697fba56bdca679014d45790701
         ]);
 
         if (!Auth::attempt($credentials)) {
@@ -21,6 +29,7 @@ class AuthController extends Controller
             ], 401);
         }
 
+<<<<<<< HEAD
         $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -51,5 +60,13 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         return response()->json($request->user());
+=======
+        $request->session()->regenerate();
+
+        return response()->json([
+            'user' => Auth::user(),
+            'csrf_token' => csrf_token()
+        ]);
+>>>>>>> 3d9fbeb966ba2697fba56bdca679014d45790701
     }
 }
